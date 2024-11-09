@@ -15,7 +15,7 @@ export function Task() {
             name: 'Sadik Istiak',
           },
         ].map(({ img, name }) => (
-          <figure className="flex items-center gap-2">
+          <figure key={img} className="flex items-center gap-2">
             <img
               src={img}
               className="size-6 rounded-full object-cover"

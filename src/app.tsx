@@ -10,7 +10,10 @@ export default function App() {
     <main className="container">
       <div className="my-4 flex gap-2 max-w-full overflow-x-auto">
         {data.map(({ label, color }) => (
-          <section className="bg-gray-100 text-stone-800 max-h-[calc(100svh-4rem)] overflow-y-auto min-w-[28rem]">
+          <section
+            key={label}
+            className="bg-gray-100 text-stone-800 max-h-[calc(100svh-4rem)] overflow-y-auto min-w-[28rem]"
+          >
             <div className="flex items-center gap-2.5 bg-gray-100 p-3 sticky top-0">
               {color && (
                 <div

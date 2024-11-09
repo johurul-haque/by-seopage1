@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -12,18 +14,36 @@ import {
   TabsTrigger,
 } from '../components/ui/tabs';
 import { PaperClip, Upload } from '../icons';
+import { bucket } from '../lib/bucket';
+import { FileObject } from '../types/file-object';
+import Preview from './preview';
 
 export default function AttachmentDialog() {
+  const [file, setFile] = useState<File | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [fileList, setFileList] = useState<FileObject[]>([]);
+
+  const [refetchKey, setRefetchKey] = useState(0);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await bucket.list();
+
+      if (data) setFileList(data);
+    })();
+  }, [refetchKey]);
+
   return (
     <Dialog>
       <DialogTrigger asChild>
         <button className="flex gap-1.5 items-center">
           <span className="sr-only">Attachments</span>
           <PaperClip className="size-5" />
-          <span>25</span>
+          <span>{fileList.length || 25}</span>
         </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] bg-white">
+      <DialogContent className="sm:max-w-[425px] bg-white overflow-y-auto max-h-[94svh]">
         <DialogHeader>
           <DialogTitle>Attachment</DialogTitle>
         </DialogHeader>
@@ -31,6 +51,7 @@ export default function AttachmentDialog() {
           <TabsList className="[&>*]:px-5 [&>*]:py-2">
             {['upload', 'preview'].map((value) => (
               <TabsTrigger
+                key={value}
                 value={value}
                 className="data-[state=active]:border-b border-neutral-900 rounded-none capitalize"
               >
@@ -41,21 +62,43 @@ export default function AttachmentDialog() {
 
           <TabsContent value="upload" className="pt-2">
             <form
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
+                setIsLoading(true);
 
-                console.log(e.currentTarget.file.value);
+                if (!file) return setIsLoading(false);
+
+                const { error } = await bucket.upload(file.name, file);
+
+                if (error) {
+                  toast.error('Something went wrong! Try again later.');
+                } else {
+                  toast.success('Upload successful.', {
+                    description: 'Preview the file from the preview tab',
+                  });
+
+                  setRefetchKey((prev) => prev + 1);
+                }
+
+                setIsLoading(false);
               }}
             >
               <input
                 id="file"
-                name="file"
                 type="file"
+                onChange={(e) => {
+                  if (e.currentTarget.files) {
+                    setFile(e.currentTarget.files[0]);
+                  }
+                }}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
                 required
               />
 
-              <button className="bg-neutral-950 text-white flex items-center justify-center gap-4 font-medium px-4 py-2 rounded-md w-full mt-4 hover:opacity-90">
+              <button
+                aria-disabled={isLoading}
+                className="bg-neutral-950 text-white flex items-center justify-center gap-4 font-medium px-4 py-2 rounded-md w-full mt-4 hover:opacity-90 aria-disabled:opacity-80"
+              >
                 <Upload className="mr-2 h-4 w-4" />
                 Upload
               </button>
@@ -63,7 +106,7 @@ export default function AttachmentDialog() {
           </TabsContent>
 
           <TabsContent value="preview" className="pt-4">
-            <p>Preview tab content will be added later.</p>
+            <Preview data={fileList} />
           </TabsContent>
         </Tabs>
       </DialogContent>
