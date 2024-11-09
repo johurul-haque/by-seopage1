@@ -68,19 +68,30 @@ export default function AttachmentDialog() {
 
                 if (!file) return setIsLoading(false);
 
-                const { error } = await bucket.upload(file.name, file);
-
-                if (error) {
-                  toast.error('Something went wrong! Try again later.');
-                } else {
-                  toast.success('Upload successful.', {
-                    description: 'Preview the file from the preview tab',
-                  });
-
-                  setRefetchKey((prev) => prev + 1);
-                }
-
-                setIsLoading(false);
+                await toast
+                  .promise(
+                    async () => {
+                      const { error } = await bucket.upload(file.name, file);
+                      if (error) throw error;
+                    },
+                    {
+                      loading: 'Uploading file...',
+                      success: () => {
+                        setRefetchKey((prev) => prev + 1);
+                        return 'Success. Preview the file from the preview tab.';
+                      },
+                      error: (error) => {
+                        return (
+                          error.message ||
+                          'Something went wrong! Try again later.'
+                        );
+                      },
+                      finally: () => {
+                        setIsLoading(false);
+                      },
+                    }
+                  )
+                  .unwrap();
               }}
             >
               <input
@@ -96,8 +107,8 @@ export default function AttachmentDialog() {
               />
 
               <button
-                aria-disabled={isLoading}
-                className="bg-neutral-950 text-white flex items-center justify-center gap-4 font-medium px-4 py-2 rounded-md w-full mt-4 hover:opacity-90 aria-disabled:opacity-80"
+                disabled={isLoading}
+                className="bg-neutral-950 text-white flex items-center justify-center gap-4 font-medium px-4 py-2 rounded-md w-full mt-4 hover:opacity-90 disabled:opacity-80"
               >
                 <Upload className="mr-2 h-4 w-4" />
                 Upload
