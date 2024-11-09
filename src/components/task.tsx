@@ -1,4 +1,5 @@
-import { Calendar, Clipboard, CommentIcon, Layers, PaperClip } from '../icons';
+import { Calendar, Clipboard, CommentIcon, Layers } from '../icons';
+import AttachmentDialog from './attachment';
 
 export function Task() {
   return (
@@ -72,11 +73,7 @@ export function Task() {
             <span>15</span>
           </button>
 
-          <button className="flex gap-1.5 items-center">
-            <span className="sr-only">Attachments</span>
-            <PaperClip className="size-5" />
-            <span>25</span>
-          </button>
+          <AttachmentDialog />
         </div>
 
         <dl>
