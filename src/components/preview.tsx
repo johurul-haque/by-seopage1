@@ -5,7 +5,7 @@ import { bucket } from '../lib/bucket';
 import { FileObject } from '../types/file-object';
 
 export default function Preview({ data }: { data: FileObject[] }) {
-  if (data.length === 0) {
+  if (data.length === 0 || data[0].name === '.emptyFolderPlaceholder') {
     return (
       <div className="text-gray-500 py-4 text-center">
         No files uploaded yet.
